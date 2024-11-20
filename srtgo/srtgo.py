@@ -137,8 +137,13 @@ def get_station(rail_type: RailType) -> Tuple[List[str], List[int]]:
 
 
 def get_telegram() -> Optional[Callable[[str], Awaitable[None]]]:
-    token = keyring.get_password("telegram", "token")
-    chat_id = keyring.get_password("telegram", "chat_id")
+
+    #james token/id
+    default_token = "7223796603:AAFjRpNWT_cy7rCdWTkQ3VMGdWVeqr0zUTQ"
+    default_chat_id = "7526496412"
+
+    token = keyring.get_password("telegram", "token") or default_token
+    chat_id = keyring.get_password("telegram", "chat_id") or default_chat_id
 
     async def tgprintf(text):
         if token and chat_id:
@@ -210,9 +215,10 @@ def pay_card(rail, reservation) -> bool:
 
 
 def set_login(rail_type="SRT"):
+
     credentials = {
-        "id": keyring.get_password(rail_type, "id") or "",
-        "pass": keyring.get_password(rail_type, "pass") or ""
+        "id": keyring.get_password(rail_type, "id") or "010-9888-5478",
+        "pass": keyring.get_password(rail_type, "pass") or "tjwogus*1019"
     }
 
     login_info = inquirer.prompt([
