@@ -110,6 +110,7 @@ STATIONS = {
         "강릉",
         "행신",
         "정동진",
+        "진영",
     ],
 }
 DEFAULT_STATIONS = {
