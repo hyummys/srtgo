@@ -9,3 +9,6 @@ python-telegram-bot>=20.0
 curl_cffi>=0.5
 requests>=2.31
 PyCryptodome>=3.19
+termcolor
+keyring
+inquirer>=3.4
