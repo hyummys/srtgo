@@ -1,0 +1,18 @@
+# Database
+data/srtgo.db
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual Environment
+venv/
+
+# Environment
+.env
+.env.local

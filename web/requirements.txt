@@ -1,0 +1,11 @@
+fastapi>=0.104
+uvicorn[standard]>=0.24
+aiosqlite>=0.19
+cryptography>=41.0
+python-multipart>=0.0.6
+python-jose[cryptography]>=3.3
+bcrypt>=4.0
+python-telegram-bot>=20.0
+curl_cffi>=0.5
+requests>=2.31
+PyCryptodome>=3.19
