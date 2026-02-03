@@ -12,13 +12,19 @@ SRTgo의 웹 인터페이스. SRT/KTX 열차 예매 자동화를 브라우저에
 | 프론트엔드 | Next.js 14, React 18, TypeScript, Tailwind CSS 3.4 |
 | 텔레그램 | python-telegram-bot (관리자 승인 봇) |
 
-## 빠른 시작
+## 빠른 시작 (새 PC)
 
-### 1. 백엔드 설정
+환경변수(.env)와 DB가 이미 레포에 포함되어 있으므로, clone 후 의존성만 설치하면 됩니다.
+
+### 사전 설치
+- Python 3.12+: https://www.python.org/downloads/
+- Node.js 20+: https://nodejs.org/
+
+### 1. 클론 + 의존성 설치
 
 ```bash
-# 프로젝트 루트에서
-cd srtgo_org
+git clone https://github.com/hyummys/srtgo.git
+cd srtgo
 
 # Python 가상환경 생성 + 활성화
 python -m venv web/venv
@@ -27,39 +33,45 @@ web\venv\Scripts\activate
 # Linux/Mac:
 source web/venv/bin/activate
 
-# 의존성 설치
-pip install -r web/backend/requirements.txt
-pip install python-jose[cryptography] bcrypt python-telegram-bot
-pip install curl_cffi requests PyCryptodome
+# srtgo 코어 설치
+pip install -e .
 
-# 환경변수 설정
-# web/.env 파일 생성:
-#   SRTGO_SECRET_KEY=<python -c "import secrets; print(secrets.token_hex(32))">
-#   SRTGO_JWT_SECRET=<python -c "import secrets; print(secrets.token_hex(32))">
+# 백엔드 의존성 설치
+pip install -r web/requirements.txt
 
-# 서버 실행
-python -m web.backend.run
-# → http://localhost:8000
+# 프론트엔드 의존성 설치 + 빌드
+cd web/frontend
+npm install
+npm run build
+cd ../..
 ```
 
-### 2. 프론트엔드 설정
+### 2. 서버 실행
 
 ```bash
-cd web/frontend
+# 터미널 1: 백엔드 (프로젝트 루트에서)
+# Windows:
+web\venv\Scripts\python.exe -m web.backend.run
+# Linux/Mac:
+web/venv/bin/python -m web.backend.run
 
-# 의존성 설치
-npm install
-
-# 환경변수 설정
-# web/frontend/.env.local:
-#   NEXT_PUBLIC_API_URL=http://localhost:8000
-
-# 개발 서버 실행
-npm run dev
-# → http://localhost:3000
+# 터미널 2: 프론트엔드
+cd web/frontend && npm start
 ```
 
-### 3. 첫 사용
+- 백엔드: http://localhost:8000
+- 프론트엔드: http://localhost:3000
+
+### 3. 외부 접속 (Cloudflare Tunnel)
+
+```bash
+# 터미널 3: (cloudflared 설치 필요)
+cloudflared tunnel --url http://localhost:3000
+```
+
+출력되는 `https://xxxxx.trycloudflare.com` URL로 외부에서 접속 가능.
+
+### 4. 첫 사용 (DB가 비어있는 경우)
 
 1. http://localhost:3000 접속
 2. **회원가입** - 첫 번째 가입자가 자동으로 관리자(admin)가 됩니다
