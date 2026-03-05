@@ -515,7 +515,7 @@ class Korail:
             self._session = requests.session()
         self._session.headers.update(DEFAULT_HEADERS)
         self._device = "AD"
-        self._version = "240531001"
+        self._version = "260225001"
         self._key = "korail1234567890"
         self._idx = None
         self.korail_id = korail_id

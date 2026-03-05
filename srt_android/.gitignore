@@ -1,0 +1,49 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+*.jar
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+
+# Kotlin
+*.kotlin_module
+
+# Android Studio
+/.idea/
+*.iml
+/.navigation/
+
+# Keystore files
+*.jks
+*.keystore
+
+# Generated files
+bin/
+gen/
+out/
+
+# Gradle files
+.gradle/
+build/
+
+# App build output
+/app/build/
+/app/release/
+
+# Local configuration file (sdk path, etc)
+local.properties

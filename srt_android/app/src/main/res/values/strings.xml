@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SRTgo</string>
+
+    <!-- Navigation -->
+    <string name="nav_search">검색</string>
+    <string name="nav_reservations">예약</string>
+    <string name="nav_history">이력</string>
+    <string name="nav_settings">설정</string>
+
+    <!-- Rail Type -->
+    <string name="rail_srt">SRT</string>
+    <string name="rail_ktx">KTX</string>
+
+    <!-- Search -->
+    <string name="departure_station">출발역</string>
+    <string name="arrival_station">도착역</string>
+    <string name="select_date">날짜 선택</string>
+    <string name="select_time">시간 선택</string>
+    <string name="passenger_count">승객 수</string>
+    <string name="seat_type">좌석 유형</string>
+    <string name="search_trains">열차 조회</string>
+    <string name="swap_stations">출발역/도착역 교환</string>
+
+    <!-- Result -->
+    <string name="start_macro">예매 시작</string>
+    <string name="reserve_now">바로 예약</string>
+    <string name="auto_pay">자동 결제</string>
+    <string name="general_seat">일반실</string>
+    <string name="special_seat">특실</string>
+    <string name="available">예약가능</string>
+    <string name="sold_out">매진</string>
+    <string name="standby">예약대기</string>
+
+    <!-- Macro -->
+    <string name="macro_running">매크로 실행 중</string>
+    <string name="macro_attempts">시도 횟수: %d회</string>
+    <string name="macro_elapsed">경과 시간: %s</string>
+    <string name="macro_cancel">매크로 취소</string>
+    <string name="macro_success">예매 성공!</string>
+    <string name="macro_failed">예매 실패</string>
+
+    <!-- Reservations -->
+    <string name="no_reservations">예약 내역이 없습니다</string>
+    <string name="pay">결제</string>
+    <string name="cancel_reservation">예약 취소</string>
+    <string name="refund">환불</string>
+
+    <!-- Settings -->
+    <string name="srt_account">SRT 계정</string>
+    <string name="ktx_account">KTX 계정</string>
+    <string name="card_info">카드 정보</string>
+    <string name="telegram_settings">텔레그램 설정</string>
+    <string name="login_test">로그인 테스트</string>
+    <string name="save">저장</string>
+    <string name="test_message">테스트 메시지</string>
+
+    <!-- Common -->
+    <string name="loading">로딩 중…</string>
+    <string name="error">오류</string>
+    <string name="ok">확인</string>
+    <string name="cancel">취소</string>
+    <string name="retry">재시도</string>
+
+    <!-- Notification -->
+    <string name="notification_channel_macro">매크로 실행</string>
+    <string name="notification_channel_macro_desc">매크로 실행 상태를 표시합니다</string>
+</resources>
