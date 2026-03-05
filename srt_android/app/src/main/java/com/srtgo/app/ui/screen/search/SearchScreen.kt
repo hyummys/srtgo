@@ -83,6 +83,7 @@ fun SearchScreen(
         uiState.trains?.let {
             if (it.isNotEmpty()) {
                 onNavigateToResult(uiState.toSearchParamsJson())
+                viewModel.clearResults()
             }
         }
     }

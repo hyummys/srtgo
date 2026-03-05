@@ -215,4 +215,8 @@ class SearchViewModel @Inject constructor(
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }
+
+    fun clearResults() {
+        _uiState.update { it.copy(trains = null) }
+    }
 }

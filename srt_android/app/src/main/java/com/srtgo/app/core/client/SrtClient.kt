@@ -125,7 +125,11 @@ class SrtClient @Inject constructor(
         }
 
         val combined = Passenger.combine(passengers)
-        val netfunnelKey = netFunnelHelper.run(RailType.SRT)
+        val netfunnelKey = try {
+            netFunnelHelper.run(RailType.SRT)
+        } catch (_: Exception) {
+            ""  // NetFunnel 실패 시 빈 키로 시도
+        }
 
         val data = mapOf(
             "chtnDvCd" to "1",
@@ -243,7 +247,11 @@ class SrtClient @Inject constructor(
             SeatType.SPECIAL_FIRST -> train.isSpecialAvailable
         }
 
-        val netfunnelKey = netFunnelHelper.run(RailType.SRT)
+        val netfunnelKey = try {
+            netFunnelHelper.run(RailType.SRT)
+        } catch (_: Exception) {
+            ""
+        }
 
         val data = mutableMapOf(
             "jobId" to jobId,
