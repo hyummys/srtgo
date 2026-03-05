@@ -22,7 +22,7 @@ import javax.inject.Inject
 
 
 data class SearchUiState(
-    val railType: RailType = RailType.SRT,
+    val railType: RailType = RailType.KTX,
     val departureStation: String = "",
     val departureCode: String = "",
     val arrivalStation: String = "",
@@ -113,7 +113,7 @@ class SearchViewModel @Inject constructor(
         }
         val defaultArr = when (_uiState.value.railType) {
             RailType.SRT -> "부산" to (Station.SRT_STATIONS["부산"] ?: "")
-            RailType.KTX -> "부산" to (Station.KTX_STATIONS["부산"] ?: "")
+            RailType.KTX -> "동대구" to (Station.KTX_STATIONS["동대구"] ?: "")
         }
         _uiState.update {
             it.copy(

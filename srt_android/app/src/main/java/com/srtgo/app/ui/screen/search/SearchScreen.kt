@@ -203,7 +203,7 @@ private fun RailTypeSelector(
     selectedRailType: RailType,
     onRailTypeSelected: (RailType) -> Unit
 ) {
-    val selectedIndex = if (selectedRailType == RailType.SRT) 0 else 1
+    val selectedIndex = if (selectedRailType == RailType.KTX) 0 else 1
     TabRow(
         selectedTabIndex = selectedIndex,
         containerColor = MaterialTheme.colorScheme.surface,
@@ -211,23 +211,23 @@ private fun RailTypeSelector(
     ) {
         Tab(
             selected = selectedIndex == 0,
-            onClick = { onRailTypeSelected(RailType.SRT) },
+            onClick = { onRailTypeSelected(RailType.KTX) },
             text = {
                 Text(
-                    "SRT",
+                    "KTX",
                     fontWeight = if (selectedIndex == 0) FontWeight.Bold else FontWeight.Normal,
-                    color = if (selectedIndex == 0) SrtOrange else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (selectedIndex == 0) KtxPurple else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         )
         Tab(
             selected = selectedIndex == 1,
-            onClick = { onRailTypeSelected(RailType.KTX) },
+            onClick = { onRailTypeSelected(RailType.SRT) },
             text = {
                 Text(
-                    "KTX",
+                    "SRT",
                     fontWeight = if (selectedIndex == 1) FontWeight.Bold else FontWeight.Normal,
-                    color = if (selectedIndex == 1) KtxPurple else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (selectedIndex == 1) SrtOrange else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         )
