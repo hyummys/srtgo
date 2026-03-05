@@ -1,11 +1,11 @@
 package com.srtgo.app.core.crypto
 
-import android.util.Base64
 import com.srtgo.app.core.exception.KtxLoginException
 import com.srtgo.app.core.network.SessionManager
+import java.math.BigInteger
+import java.security.KeyFactory
+import java.security.spec.RSAPublicKeySpec
 import javax.crypto.Cipher
-import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.SecretKeySpec
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -15,43 +15,41 @@ class KtxPasswordEncryptor @Inject constructor(
 ) {
 
     companion object {
-        private const val CODE_URL =
-            "https://smart.letskorail.com:443/classes/com.korail.mobile.common.code.do"
+        private const val PBLK_URL =
+            "https://www.korail.com/ebizweb/tour/mypage/pwd_action/pblk"
     }
 
     suspend fun encrypt(password: String): EncryptResult {
-        val json = sessionManager.ktxPostForm(CODE_URL, mapOf("code" to "app.login.cphd"))
+        val json = sessionManager.ktxGet(PBLK_URL)
 
-        if (json.optString("strResult") != "SUCC" || !json.has("app.login.cphd")) {
-            throw KtxLoginException("Failed to fetch encryption key")
+        val modulus = json.optString("publicKeyModulus", "")
+        val exponent = json.optString("publicKeyExponent", "")
+        val keyname = json.optString("keyname", "")
+
+        if (modulus.isEmpty() || exponent.isEmpty() || keyname.isEmpty()) {
+            throw KtxLoginException("Failed to fetch RSA public key")
         }
 
-        val keyData = json.getJSONObject("app.login.cphd")
-        val idx = keyData.getInt("idx")
-        val hexKey = keyData.getString("key")
-
-        val encryptKey = hexKey.toByteArray(Charsets.UTF_8)
-        val iv = hexKey.substring(0, 16).toByteArray(Charsets.UTF_8)
-
-        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-        cipher.init(
-            Cipher.ENCRYPT_MODE,
-            SecretKeySpec(encryptKey, "AES"),
-            IvParameterSpec(iv)
+        val rsaSpec = RSAPublicKeySpec(
+            BigInteger(modulus, 16),
+            BigInteger(exponent, 16)
         )
+        val publicKey = KeyFactory.getInstance("RSA").generatePublic(rsaSpec)
+
+        val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey)
         val encrypted = cipher.doFinal(password.toByteArray(Charsets.UTF_8))
 
-        val firstBase64 = Base64.encodeToString(encrypted, Base64.NO_WRAP)
-        val doubleBase64 = Base64.encodeToString(firstBase64.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
+        val hexString = encrypted.joinToString("") { "%02x".format(it) }
 
         return EncryptResult(
-            encryptedPassword = doubleBase64,
-            idx = idx
+            encryptedPassword = hexString,
+            idx = keyname
         )
     }
 }
 
 data class EncryptResult(
     val encryptedPassword: String,
-    val idx: Int
+    val idx: String
 )

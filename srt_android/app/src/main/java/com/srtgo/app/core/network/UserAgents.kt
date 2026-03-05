@@ -16,7 +16,7 @@ object UserAgents {
     val KTX_DEFAULT_HEADERS = mapOf(
         "Content-Type" to "application/x-www-form-urlencoded; charset=UTF-8",
         "User-Agent" to KTX_USER_AGENT,
-        "Host" to "smart.letskorail.com",
+        "Host" to "www.korail.com",
         "Connection" to "Keep-Alive",
         "Accept-Encoding" to "gzip"
     )

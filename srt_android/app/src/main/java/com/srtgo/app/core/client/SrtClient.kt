@@ -112,11 +112,16 @@ class SrtClient @Inject constructor(
         passengers: List<Passenger>,
         seatType: SeatType
     ): List<Train> {
-        if (!Station.isValidStation(RailType.SRT, departure)) {
-            throw IllegalArgumentException("Invalid departure station: $departure")
+        // departure/arrival can be either station code or name
+        val depCode = if (Station.isValidStation(RailType.SRT, departure)) {
+            Station.getCode(RailType.SRT, departure)
+        } else {
+            departure  // already a code
         }
-        if (!Station.isValidStation(RailType.SRT, arrival)) {
-            throw IllegalArgumentException("Invalid arrival station: $arrival")
+        val arrCode = if (Station.isValidStation(RailType.SRT, arrival)) {
+            Station.getCode(RailType.SRT, arrival)
+        } else {
+            arrival  // already a code
         }
 
         val combined = Passenger.combine(passengers)
@@ -128,8 +133,8 @@ class SrtClient @Inject constructor(
             "dptTm" to time,
             "dptDt1" to date,
             "dptTm1" to time.substring(0, 2) + "0000",
-            "dptRsStnCd" to Station.getCode(RailType.SRT, departure),
-            "arvRsStnCd" to Station.getCode(RailType.SRT, arrival),
+            "dptRsStnCd" to depCode,
+            "arvRsStnCd" to arrCode,
             "stlbTrnClsfCd" to "05",
             "trnGpCd" to "109",
             "trnNo" to "",

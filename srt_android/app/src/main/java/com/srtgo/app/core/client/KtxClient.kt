@@ -18,7 +18,7 @@ class KtxClient @Inject constructor(
 
     companion object {
         private const val KORAIL_MOBILE =
-            "https://smart.letskorail.com:443/classes/com.korail.mobile"
+            "https://www.korail.com/ebizweb/classes/com.korail.mobile"
 
         private val ENDPOINTS = mapOf(
             "login" to "$KORAIL_MOBILE.login.Login",
@@ -39,6 +39,8 @@ class KtxClient @Inject constructor(
         private const val VERSION = "260225001"
         private const val DEFAULT_KEY = "korail1234567890"
 
+        private const val MAX_LOGIN_RETRIES = 5
+
         private val EMAIL_REGEX = Regex("[^@]+@[^@]+\\.[^@]+")
         private val PHONE_REGEX = Regex("(\\d{3})-(\\d{3,4})-(\\d{4})")
     }
@@ -55,7 +57,6 @@ class KtxClient @Inject constructor(
         private set
 
     private var key: String = DEFAULT_KEY
-    private var idx: Int? = null
 
     override suspend fun login(id: String, password: String) {
         val txtInputFlg = when {
@@ -64,35 +65,53 @@ class KtxClient @Inject constructor(
             else -> "2"
         }
 
-        val encResult = passwordEncryptor.encrypt(password)
+        var lastError: String = "로그인 실패"
 
-        idx = encResult.idx
+        for (attempt in 1..MAX_LOGIN_RETRIES) {
+            val encResult = passwordEncryptor.encrypt(password)
 
-        val data = mapOf(
-            "Device" to DEVICE,
-            "Version" to VERSION,
-            "Key" to key,
-            "txtMemberNo" to id,
-            "txtPwd" to encResult.encryptedPassword,
-            "txtInputFlg" to txtInputFlg,
-            "idx" to encResult.idx.toString()
-        )
-
-        val json = sessionManager.ktxPostForm(ENDPOINTS["login"]!!, data)
-
-        val strResult = json.optString("strResult", "")
-        if (strResult == "SUCC" && json.has("strMbCrdNo")) {
-            membershipNumber = json.getString("strMbCrdNo")
-            name = json.optString("strCustNm", "")
-            email = json.optString("strEmailAdr", "")
-            phoneNumber = json.optString("strCpNo", "")
-            isLoggedIn = true
-        } else {
-            isLoggedIn = false
-            throw KtxLoginException(
-                json.optString("h_msg_txt", json.optString("strResult", "로그인 실패"))
+            val data = mapOf(
+                "Device" to DEVICE,
+                "Version" to VERSION,
+                "Key" to key,
+                "txtMemberNo" to id,
+                "txtPwd" to encResult.encryptedPassword,
+                "txtInputFlg" to txtInputFlg,
+                "idx" to encResult.idx
             )
+
+            val json = sessionManager.ktxPostForm(ENDPOINTS["login"]!!, data)
+
+            val strResult = json.optString("strResult", "")
+            if (strResult == "SUCC" && json.has("strMbCrdNo")) {
+                membershipNumber = json.getString("strMbCrdNo")
+                name = json.optString("strCustNm", "")
+                email = json.optString("strEmailAdr", "")
+                phoneNumber = json.optString("strCpNo", "")
+                isLoggedIn = true
+                return
+            }
+
+            val msgCd = json.optString("h_msg_cd", "")
+            lastError = json.optString("h_msg_txt", json.optString("strResult", "로그인 실패"))
+
+            // MACRO 에러는 재시도 불가
+            if ("MACRO" in msgCd) {
+                isLoggedIn = false
+                throw KtxLoginException("MACRO ERROR: $lastError")
+            }
+
+            // 계정 잠김은 재시도 불가
+            if (msgCd == "WRC000390") {
+                isLoggedIn = false
+                throw KtxLoginException(lastError)
+            }
+
+            // S034 등 RSA 키 로테이션 문제 → 재시도
         }
+
+        isLoggedIn = false
+        throw KtxLoginException("$lastError (RSA 키 로테이션 재시도 $MAX_LOGIN_RETRIES 회 초과)")
     }
 
     override suspend fun logout() {
@@ -111,6 +130,18 @@ class KtxClient @Inject constructor(
         val combined = Passenger.combine(passengers)
         val counts = passengerCounts(combined)
 
+        // departure/arrival can be either station code or name; API requires name
+        val depName = if (Station.isValidStation(RailType.KTX, departure)) {
+            departure  // already a name
+        } else {
+            Station.getName(RailType.KTX, departure)  // code → name
+        }
+        val arrName = if (Station.isValidStation(RailType.KTX, arrival)) {
+            arrival  // already a name
+        } else {
+            Station.getName(RailType.KTX, arrival)  // code → name
+        }
+
         val data = mapOf(
             "Device" to DEVICE,
             "Version" to VERSION,
@@ -119,8 +150,8 @@ class KtxClient @Inject constructor(
             "radJobId" to "1",
             "selGoTrain" to "109",
             "txtTrnGpCd" to "109",
-            "txtGoStart" to departure,
-            "txtGoEnd" to arrival,
+            "txtGoStart" to depName,
+            "txtGoEnd" to arrName,
             "txtGoAbrdDt" to date,
             "txtGoHour" to time,
             "txtPsgFlg_1" to counts["adult"].toString(),
