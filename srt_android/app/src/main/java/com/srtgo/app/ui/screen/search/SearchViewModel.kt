@@ -7,8 +7,7 @@ import com.srtgo.app.core.model.PassengerType
 import com.srtgo.app.core.model.RailType
 import com.srtgo.app.core.model.SeatType
 import com.srtgo.app.core.model.Station
-import com.srtgo.app.core.model.Train
-import com.srtgo.app.domain.usecase.SearchTrainsUseCase
+import com.srtgo.app.data.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +19,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import javax.inject.Inject
+
 
 data class SearchUiState(
     val railType: RailType = RailType.SRT,
@@ -34,9 +34,7 @@ data class SearchUiState(
     val seniorCount: Int = 0,
     val disabilityCount: Int = 0,
     val seatType: SeatType = SeatType.GENERAL_FIRST,
-    val isLoading: Boolean = false,
     val error: String? = null,
-    val trains: List<Train>? = null,
     val favoriteStations: List<String> = emptyList()
 ) {
     val formattedDate: String
@@ -84,7 +82,7 @@ data class SearchUiState(
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
-    private val searchTrainsUseCase: SearchTrainsUseCase
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -93,6 +91,7 @@ class SearchViewModel @Inject constructor(
     init {
         setDefaultDateTime()
         setDefaultStations()
+        loadFavorites()
     }
 
     private fun setDefaultDateTime() {
@@ -126,9 +125,31 @@ class SearchViewModel @Inject constructor(
         }
     }
 
+    private fun loadFavorites() {
+        viewModelScope.launch {
+            val railType = _uiState.value.railType.name
+            val favorites = settingsRepository.getFavoriteStations(railType)
+            _uiState.update { it.copy(favoriteStations = favorites) }
+        }
+    }
+
     fun setRailType(railType: RailType) {
         _uiState.update { it.copy(railType = railType, error = null) }
         setDefaultStations()
+        loadFavorites()
+    }
+
+    fun toggleFavorite(stationName: String) {
+        viewModelScope.launch {
+            val current = _uiState.value.favoriteStations.toMutableList()
+            if (stationName in current) {
+                current.remove(stationName)
+            } else {
+                current.add(stationName)
+            }
+            _uiState.update { it.copy(favoriteStations = current) }
+            settingsRepository.saveFavoriteStations(_uiState.value.railType.name, current)
+        }
     }
 
     fun setDepartureStation(name: String, code: String) {
@@ -180,43 +201,20 @@ class SearchViewModel @Inject constructor(
         _uiState.update { it.copy(seatType = seatType, error = null) }
     }
 
-    fun search() {
+    fun validateAndGetParams(): String? {
         val state = _uiState.value
         if (state.departureStation.isBlank() || state.arrivalStation.isBlank()) {
             _uiState.update { it.copy(error = "출발역과 도착역을 선택하세요") }
-            return
+            return null
         }
         if (state.departureStation == state.arrivalStation) {
             _uiState.update { it.copy(error = "출발역과 도착역이 같습니다") }
-            return
+            return null
         }
-
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null, trains = null) }
-            val result = searchTrainsUseCase(
-                railType = state.railType,
-                departure = state.departureCode,
-                arrival = state.arrivalCode,
-                date = state.date,
-                time = state.time,
-                passengers = state.toPassengerList(),
-                seatType = state.seatType
-            )
-            result.onSuccess { trains ->
-                _uiState.update { it.copy(isLoading = false, trains = trains) }
-            }.onFailure { e ->
-                _uiState.update {
-                    it.copy(isLoading = false, error = e.message ?: "검색 실패")
-                }
-            }
-        }
+        return state.toSearchParamsJson()
     }
 
     fun clearError() {
         _uiState.update { it.copy(error = null) }
-    }
-
-    fun clearResults() {
-        _uiState.update { it.copy(trains = null) }
     }
 }

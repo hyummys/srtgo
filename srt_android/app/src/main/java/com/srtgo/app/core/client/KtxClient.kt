@@ -179,14 +179,7 @@ class KtxClient @Inject constructor(
         val trains = mutableListOf<Train>()
         for (i in 0 until trnInfos.length()) {
             val trainData = ResponseParser.jsonObjectToMap(trnInfos.getJSONObject(i))
-            val train = Train.fromKtxData(trainData)
-            if (train.hasSeat() || train.isStandbyAvailable) {
-                trains.add(train)
-            }
-        }
-
-        if (trains.isEmpty()) {
-            throw KtxNoResultsException()
+            trains.add(Train.fromKtxData(trainData))
         }
 
         return trains

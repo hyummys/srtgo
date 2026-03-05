@@ -1,7 +1,6 @@
 package com.srtgo.app.ui.screen.search
 
 import android.app.DatePickerDialog
-import android.app.TimePickerDialog
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +22,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -41,7 +39,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -56,8 +53,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.srtgo.app.core.model.PassengerType
 import com.srtgo.app.core.model.RailType
 import com.srtgo.app.core.model.SeatType
-import com.srtgo.app.ui.common.LoadingOverlay
 import com.srtgo.app.ui.common.StationPicker
+import com.srtgo.app.ui.common.WheelTimePicker
 import com.srtgo.app.ui.theme.KtxPurple
 import com.srtgo.app.ui.theme.SrtOrange
 import java.util.Calendar
@@ -71,20 +68,12 @@ fun SearchScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var showDeparturePicker by remember { mutableStateOf(false) }
     var showArrivalPicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
             snackbarHostState.showSnackbar(it)
             viewModel.clearError()
-        }
-    }
-
-    LaunchedEffect(uiState.trains) {
-        uiState.trains?.let {
-            if (it.isNotEmpty()) {
-                onNavigateToResult(uiState.toSearchParamsJson())
-                viewModel.clearResults()
-            }
         }
     }
 
@@ -119,7 +108,7 @@ fun SearchScreen(
                 date = uiState.formattedDate,
                 time = uiState.formattedTime,
                 onDateSelected = { viewModel.setDate(it) },
-                onTimeSelected = { viewModel.setTime(it) }
+                onTimeClick = { showTimePicker = true }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -145,12 +134,15 @@ fun SearchScreen(
 
             // Search Button
             Button(
-                onClick = { viewModel.search() },
+                onClick = {
+                    viewModel.validateAndGetParams()?.let { params ->
+                        onNavigateToResult(params)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                enabled = !uiState.isLoading
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
                     text = "열차 조회",
@@ -165,11 +157,6 @@ fun SearchScreen(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
-
-        LoadingOverlay(
-            isLoading = uiState.isLoading,
-            message = "열차를 검색하고 있습니다..."
-        )
     }
 
     // Station Pickers
@@ -181,6 +168,7 @@ fun SearchScreen(
             viewModel.setDepartureStation(name, code)
             showDeparturePicker = false
         },
+        onToggleFavorite = { viewModel.toggleFavorite(it) },
         onDismiss = { showDeparturePicker = false }
     )
 
@@ -192,7 +180,21 @@ fun SearchScreen(
             viewModel.setArrivalStation(name, code)
             showArrivalPicker = false
         },
+        onToggleFavorite = { viewModel.toggleFavorite(it) },
         onDismiss = { showArrivalPicker = false }
+    )
+
+    // Wheel Time Picker
+    val currentHour = if (uiState.time.length >= 2) uiState.time.substring(0, 2).toIntOrNull() ?: 0 else 0
+    val currentMinute = if (uiState.time.length >= 4) uiState.time.substring(2, 4).toIntOrNull() ?: 0 else 0
+    WheelTimePicker(
+        isVisible = showTimePicker,
+        initialHour = currentHour,
+        initialMinute = currentMinute,
+        onTimeSelected = { hour, minute ->
+            viewModel.setTime(String.format("%02d%02d00", hour, minute))
+        },
+        onDismiss = { showTimePicker = false }
     )
 }
 
@@ -309,7 +311,7 @@ private fun DateTimeCard(
     date: String,
     time: String,
     onDateSelected: (String) -> Unit,
-    onTimeSelected: (String) -> Unit
+    onTimeClick: () -> Unit
 ) {
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
@@ -364,18 +366,7 @@ private fun DateTimeCard(
             OutlinedCard(
                 modifier = Modifier
                     .weight(1f)
-                    .clickable {
-                        TimePickerDialog(
-                            context,
-                            { _, hourOfDay, minute ->
-                                val timeStr = String.format("%02d%02d00", hourOfDay, minute)
-                                onTimeSelected(timeStr)
-                            },
-                            calendar.get(Calendar.HOUR_OF_DAY),
-                            0,
-                            true
-                        ).show()
-                    },
+                    .clickable { onTimeClick() },
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Column(
