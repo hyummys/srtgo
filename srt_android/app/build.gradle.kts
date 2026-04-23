@@ -24,14 +24,20 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("srtgo-release.jks")
+            storePassword = "srtgo2026"
+            keyAlias = "srtgo"
+            keyPassword = "srtgo2026"
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            isMinifyEnabled = false
+            isShrinkResources = false
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
